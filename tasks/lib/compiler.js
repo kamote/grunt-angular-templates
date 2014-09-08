@@ -10,6 +10,7 @@
 
 var minify  = require('html-minifier').minify;
 var Path    = require('path');
+var Ractive = require('ractive');
 
 /**
  * Angular Template Compiler
@@ -39,8 +40,13 @@ var Compiler = function(grunt, options, cwd) {
   this.cache = function(template, url, prefix) {
     var path = Path.join(prefix || '', url).replace(/\\/g, '/');
 
+    var template = Ractive.parse(template);
+  
+    template = JSON.stringify(template);
+
     return grunt.template.process(
-      "\n  $templateCache.put('<%= path %>',\n    <%= template %>\n  );\n",
+      // "\n  $templateCache.put('<%= path %>',\n    <%= template %>\n  );\n",
+      "\nTemplateCache['<%= path %>'] = <%= template %> ;\n",
       {
         data: {
           path:     path,
@@ -72,7 +78,7 @@ var Compiler = function(grunt, options, cwd) {
       .map(function(source, i) {
         return this.customize(source, paths[i]);
       }.bind(this))
-      .map(this.stringify)
+      // .map(this.stringify)
       .map(function(string, i) {
         return this.cache(string, this.url(files[i]), options.prefix);
       }.bind(this))
